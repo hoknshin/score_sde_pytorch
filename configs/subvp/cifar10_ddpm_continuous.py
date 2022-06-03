@@ -31,8 +31,8 @@ def get_config():
   # sampling
   sampling = config.sampling
   sampling.method = 'pc'
-  sampling.predictor = 'euler_maruyama'
-  sampling.corrector = 'none'
+  sampling.predictor = 'reverse_diffusion'  #'euler_maruyama'
+  sampling.corrector = 'langevin'  #'none'
 
   # data
   data = config.data

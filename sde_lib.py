@@ -177,6 +177,13 @@ class subVPSDE(SDE):
     self.beta_0 = beta_min
     self.beta_1 = beta_max
     self.N = N
+    self.discrete_betas = torch.linspace(beta_min / N, beta_max / N, N)
+    self.alphas = 1. - self.discrete_betas
+    self.alphas_cumprod = torch.cumprod(self.alphas, dim=0)
+    self.sqrt_alphas_cumprod = torch.sqrt(self.alphas_cumprod)
+    self.sqrt_1m_alphas_cumprod = torch.sqrt(1. - self.alphas_cumprod)
+    
+    print('subVPSDE init')
 
   @property
   def T(self):
@@ -186,6 +193,8 @@ class subVPSDE(SDE):
     beta_t = self.beta_0 + t * (self.beta_1 - self.beta_0)
     drift = -0.5 * beta_t[:, None, None, None] * x
     discount = 1. - torch.exp(-2 * self.beta_0 * t - (self.beta_1 - self.beta_0) * t ** 2)
+#     discount = torch.sqrt(t)
+
     diffusion = torch.sqrt(beta_t * discount)
     return drift, diffusion
 

@@ -26,7 +26,8 @@ import tensorflow as tf
 import tensorflow_gan as tfgan
 import logging
 # Keep the import below for registering all model definitions
-from models import ddpm, ncsnv2, ncsnpp
+# from models import ddpm, ncsnv2, ncsnpp
+from models import ddpm #, ncsnv2, ncsnpp
 import losses
 import sampling
 from models import utils as mutils
@@ -88,12 +89,15 @@ def train(config, workdir):
 
   # Setup SDEs
   if config.training.sde.lower() == 'vpsde':
+    print(config.training.sde.lower())
     sde = sde_lib.VPSDE(beta_min=config.model.beta_min, beta_max=config.model.beta_max, N=config.model.num_scales)
     sampling_eps = 1e-3
   elif config.training.sde.lower() == 'subvpsde':
+    print(config.training.sde.lower())
     sde = sde_lib.subVPSDE(beta_min=config.model.beta_min, beta_max=config.model.beta_max, N=config.model.num_scales)
     sampling_eps = 1e-3
   elif config.training.sde.lower() == 'vesde':
+    print(config.training.sde.lower())
     sde = sde_lib.VESDE(sigma_min=config.model.sigma_min, sigma_max=config.model.sigma_max, N=config.model.num_scales)
     sampling_eps = 1e-5
   else:
@@ -206,12 +210,15 @@ def evaluate(config,
 
   # Setup SDEs
   if config.training.sde.lower() == 'vpsde':
+    print(config.training.sde.lower())
     sde = sde_lib.VPSDE(beta_min=config.model.beta_min, beta_max=config.model.beta_max, N=config.model.num_scales)
     sampling_eps = 1e-3
   elif config.training.sde.lower() == 'subvpsde':
+    print(config.training.sde.lower())
     sde = sde_lib.subVPSDE(beta_min=config.model.beta_min, beta_max=config.model.beta_max, N=config.model.num_scales)
     sampling_eps = 1e-3
   elif config.training.sde.lower() == 'vesde':
+    print(config.training.sde.lower())
     sde = sde_lib.VESDE(sigma_min=config.model.sigma_min, sigma_max=config.model.sigma_max, N=config.model.num_scales)
     sampling_eps = 1e-5
   else:
@@ -239,7 +246,7 @@ def evaluate(config,
   elif config.eval.bpd_dataset.lower() == 'test':
     # Go over the dataset 5 times when computing likelihood on the test dataset
     ds_bpd = eval_ds_bpd
-    bpd_num_repeats = 5
+    bpd_num_repeats = 2  # 5
   else:
     raise ValueError(f"No bpd dataset {config.eval.bpd_dataset} recognized.")
 
@@ -260,18 +267,21 @@ def evaluate(config,
 
   begin_ckpt = config.eval.begin_ckpt
   logging.info("begin checkpoint: %d" % (begin_ckpt,))
+
   for ckpt in range(begin_ckpt, config.eval.end_ckpt + 1):
     # Wait if the target checkpoint doesn't exist yet
     waiting_message_printed = False
     ckpt_filename = os.path.join(checkpoint_dir, "checkpoint_{}.pth".format(ckpt))
+    logging.info("ckpt file path %s" % (ckpt_filename,))
     while not tf.io.gfile.exists(ckpt_filename):
       if not waiting_message_printed:
-        logging.warning("Waiting for the arrival of checkpoint_%d" % (ckpt,))
+        logging.warning("Waiting for the arrival of checkpoint_%d %s" % (ckpt, ckpt_filename))
         waiting_message_printed = True
       time.sleep(60)
 
     # Wait for 2 additional mins in case the file exists but is not ready for reading
     ckpt_path = os.path.join(checkpoint_dir, f'checkpoint_{ckpt}.pth')
+    logging.info("ckpt_path: %s" % (ckpt_path,))
     try:
       state = restore_checkpoint(ckpt_path, state, device=config.device)
     except:
@@ -307,7 +317,7 @@ def evaluate(config,
       bpds = []
       for repeat in range(bpd_num_repeats):
         bpd_iter = iter(ds_bpd)  # pytype: disable=wrong-arg-types
-        for batch_id in range(len(ds_bpd)):
+        for batch_id in range(2):  # len(ds_bpd)
           batch = next(bpd_iter)
           eval_batch = torch.from_numpy(batch['image']._numpy()).to(config.device).float()
           eval_batch = eval_batch.permute(0, 3, 1, 2)
@@ -367,6 +377,7 @@ def evaluate(config,
       all_pools = []
       this_sample_dir = os.path.join(eval_dir, f"ckpt_{ckpt}")
       stats = tf.io.gfile.glob(os.path.join(this_sample_dir, "statistics_*.npz"))
+      
       for stat_file in stats:
         with tf.io.gfile.GFile(stat_file, "rb") as fin:
           stat = np.load(fin)
