@@ -63,6 +63,7 @@ def train(config, workdir):
   writer = tensorboard.SummaryWriter(tb_dir)
 
   # Initialize model.
+  print('current lr = %.8f' % (config.optim.lr))
   score_model = mutils.create_model(config)
   ema = ExponentialMovingAverage(score_model.parameters(), decay=config.model.ema_rate)
   optimizer = losses.get_optimizer(config, score_model.parameters())
@@ -75,7 +76,7 @@ def train(config, workdir):
   tf.io.gfile.makedirs(checkpoint_dir)
   tf.io.gfile.makedirs(os.path.dirname(checkpoint_meta_dir))
   # Resume training when intermediate checkpoints are detected
-  state = restore_checkpoint(checkpoint_meta_dir, state, config.device)
+#   state = restore_checkpoint(checkpoint_meta_dir, state, config.device)
   initial_step = int(state['step'])
 
   # Build data iterators
@@ -313,8 +314,8 @@ def evaluate(config,
         fout.write(io_buffer.getvalue())
 
     # Compute log-likelihoods (bits/dim) if enabled
+    bpds = []
     if config.eval.enable_bpd:
-      bpds = []
       for repeat in range(bpd_num_repeats):
         bpd_iter = iter(ds_bpd)  # pytype: disable=wrong-arg-types
         for batch_id in range(2):  # len(ds_bpd)
@@ -337,6 +338,7 @@ def evaluate(config,
             fout.write(io_buffer.getvalue())
 
     # Generate samples and compute IS/FID/KID when enabled
+    fid = 9999.
     if config.eval.enable_sampling:
       num_sampling_rounds = config.eval.num_samples // config.eval.batch_size + 1
       for r in range(num_sampling_rounds):
@@ -417,3 +419,5 @@ def evaluate(config,
         io_buffer = io.BytesIO()
         np.savez_compressed(io_buffer, IS=inception_score, fid=fid, kid=kid)
         f.write(io_buffer.getvalue())
+        
+  return np.mean(np.asarray(bpds)), fid

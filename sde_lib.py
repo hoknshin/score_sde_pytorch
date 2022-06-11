@@ -192,8 +192,8 @@ class subVPSDE(SDE):
   def sde(self, x, t):
     beta_t = self.beta_0 + t * (self.beta_1 - self.beta_0)
     drift = -0.5 * beta_t[:, None, None, None] * x
-    discount = 1. - torch.exp(-2 * self.beta_0 * t - (self.beta_1 - self.beta_0) * t ** 2)
-#     discount = torch.sqrt(t)
+#     discount = 1. - torch.exp(-2 * self.beta_0 * t - (self.beta_1 - self.beta_0) * t ** 2)
+    discount = torch.sqrt(t)
 
     diffusion = torch.sqrt(beta_t * discount)
     return drift, diffusion
