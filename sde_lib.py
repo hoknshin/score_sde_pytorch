@@ -182,6 +182,8 @@ class subVPSDE(SDE):
     self.alphas_cumprod = torch.cumprod(self.alphas, dim=0)
     self.sqrt_alphas_cumprod = torch.sqrt(self.alphas_cumprod)
     self.sqrt_1m_alphas_cumprod = torch.sqrt(1. - self.alphas_cumprod)
+
+    self.discount_sigma = discount_sigma
     
     print('subVPSDE init')
 
@@ -193,7 +195,7 @@ class subVPSDE(SDE):
     beta_t = self.beta_0 + t * (self.beta_1 - self.beta_0)
     drift = -0.5 * beta_t[:, None, None, None] * x
 #     discount = 1. - torch.exp(-2 * self.beta_0 * t - (self.beta_1 - self.beta_0) * t ** 2)
-    discount = 1. - torch.exp((-2 * self.beta_0 * t - (self.beta_1 - self.beta_0) * t ** 2)/discount_sigma)
+    discount = 1. - torch.exp((-2 * self.beta_0 * t - (self.beta_1 - self.beta_0) * t ** 2)/self.discount_sigma)
 #     discount = torch.sqrt(t)
 
     diffusion = torch.sqrt(beta_t * discount)

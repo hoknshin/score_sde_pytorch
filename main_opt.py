@@ -39,7 +39,7 @@ flags.mark_flags_as_required(["workdir", "config", "mode"])
 def main(argv):
     
     def objective(trial):
-        FLAGS.config.model.num_scales = trial.suggest_discrete_uniform("num_scales", 900, 1200, 100)
+        FLAGS.config.model.num_scales = trial.suggest_int("num_scales", 900, 1200, step=100)
         FLAGS.config.model.beta_max = trial.suggest_discrete_uniform("beta_max", 10, 30, 10)
         FLAGS.config.model.nonlinearity = trial.suggest_categorical("nonlinearity", ["swish", "relu"])
         FLAGS.config.optim.lr = trial.suggest_float("lr", 1e-4, 4e-4, step=1e-4)
@@ -63,7 +63,7 @@ def main(argv):
 #       elif FLAGS.mode == "eval":
         # Run the evaluation pipeline
         bpd, fid = run_lib.evaluate(FLAGS.config, FLAGS.workdir, FLAGS.eval_folder)
-        return bpd + fid
+        return bpd + fid / 30.0
         
     study = optuna.create_study()
 #     create_study(direction = "maximize")
