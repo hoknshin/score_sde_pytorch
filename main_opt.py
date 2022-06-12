@@ -56,7 +56,12 @@ def main(argv):
         logger = logging.getLogger()
         logger.addHandler(handler)
         logger.setLevel('INFO')
-        
+
+        logging.info("cur trials: num_scales %d, beta_max %.0f, nonlinearity %s, lr %.6f, discound_sigma %.1f" % (
+            FLAGS.config.model.num_scales, FLAGS.config.model.beta_max, FLAGS.config.model.nonlinearity,
+            FLAGS.config.optim.lr, FLAGS.config.model.discount_sigma
+        ))
+
 #       if FLAGS.mode == "train":
         # Run the training pipeline
         run_lib.train(FLAGS.config, FLAGS.workdir)
