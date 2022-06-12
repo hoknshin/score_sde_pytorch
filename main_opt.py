@@ -43,7 +43,7 @@ def main(argv):
         FLAGS.config.model.beta_max = trial.suggest_discrete_uniform("beta_max", 10, 30, 10)
         FLAGS.config.model.nonlinearity = trial.suggest_categorical("nonlinearity", ["swish", "relu"])
         FLAGS.config.optim.lr = trial.suggest_float("lr", 1e-4, 4e-4, step=1e-4)
-        FLAGS.config.discount.sigma = trial.suggest_float("sigma", 0.7, 1.2, step=0.1)
+        FLAGS.config.model.discount_sigma = trial.suggest_float("discount_sigma", 0.7, 1.2, step=0.1)
 
         # Create the working directory
         tf.io.gfile.makedirs(FLAGS.workdir)
@@ -63,7 +63,7 @@ def main(argv):
 #       elif FLAGS.mode == "eval":
         # Run the evaluation pipeline
         bpd, fid = run_lib.evaluate(FLAGS.config, FLAGS.workdir, FLAGS.eval_folder)
-        return fid
+        return bpd + fid
         
     study = optuna.create_study()
 #     create_study(direction = "maximize")

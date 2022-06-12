@@ -52,4 +52,7 @@ def get_config():
   model.resamp_with_conv = True
   model.conditional = True
 
+  model.discount_sigma = 1.0
+
+
   return config
