@@ -28,7 +28,7 @@ import optuna
 FLAGS = flags.FLAGS
 
 config_flags.DEFINE_config_file(
-  "config", None, "Training configuration.", lock_config=True)
+  "config", None, "Training configuration.", lock_config=False)
 flags.DEFINE_string("workdir", None, "Work directory.")
 flags.DEFINE_enum("mode", None, ["train", "eval"], "Running mode: train or eval")
 flags.DEFINE_string("eval_folder", "eval",
@@ -39,16 +39,12 @@ flags.mark_flags_as_required(["workdir", "config", "mode"])
 def main(argv):
     
     def objective(trial):
-        FLAGS.config.optim.lr = trial.suggest_float('FLAG.config.optim.lr', 2e-5, 2e-3)      
+        FLAGS.config.model.num_scales = trial.suggest_discrete_uniform("num_scales", 900, 1200, 100)
+        FLAGS.config.model.beta_max = trial.suggest_discrete_uniform("beta_max", 10, 30, 10)
+        FLAGS.config.model.nonlinearity = trial.suggest_categorical("nonlinearity", ["swish", "relu"])
+        FLAGS.config.optim.lr = trial.suggest_float("lr", 1e-4, 4e-4, step=1e-4)
+        FLAGS.config.discount.sigma = trial.suggest_float("sigma", 0.7, 1.2, step=0.1)
 
-#       optim.optimizer = 'Adam'
-#       optim.lr = 2e-4
-#   sampling.predictor = 'reverse_diffusion'  #'euler_maruyama'
-#   sampling.corrector = 'langevin'  #'none'
-#   sampling.predictor = 'euler_maruyama'
-#   sampling.corrector = 'none'
-
-#       if FLAGS.mode == "train":
         # Create the working directory
         tf.io.gfile.makedirs(FLAGS.workdir)
         # Set logger so that it outputs to both console and file
@@ -60,6 +56,8 @@ def main(argv):
         logger = logging.getLogger()
         logger.addHandler(handler)
         logger.setLevel('INFO')
+        
+#       if FLAGS.mode == "train":
         # Run the training pipeline
         run_lib.train(FLAGS.config, FLAGS.workdir)
 #       elif FLAGS.mode == "eval":
@@ -69,7 +67,9 @@ def main(argv):
         
     study = optuna.create_study()
 #     create_study(direction = "maximize")
-    study.optimize(objective, n_trials=30)
+    study.optimize(objective, n_trials=80)
+  
+    torch.save(study, 'study.pth')
 
     study.best_params  # E.g. {'x': 2.002108042}
     trial = study.best_trial
