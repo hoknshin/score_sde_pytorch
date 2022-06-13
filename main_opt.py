@@ -23,7 +23,7 @@ import logging
 import os
 import tensorflow as tf
 
-import os
+import torch
 import optuna
 
 FLAGS = flags.FLAGS
@@ -84,7 +84,9 @@ def main(argv):
     print("Best Params: ")
     for key, value in trial.params.items():
         print("  {}: {}".format(key, value))
-    optuna.visualization.plot_contour(study)
+#    optuna.visualization.plot_contour(study)
+    fig = optuna.visualization.matplotlib.plot_contour(study, params=['num_scales', 'beta_max'])
+    fig.figure.savefig('cont_n_b.png')
 
 if __name__ == "__main__":
   app.run(main)
