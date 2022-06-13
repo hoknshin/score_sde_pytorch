@@ -247,7 +247,7 @@ def evaluate(config,
   elif config.eval.bpd_dataset.lower() == 'test':
     # Go over the dataset 5 times when computing likelihood on the test dataset
     ds_bpd = eval_ds_bpd
-    bpd_num_repeats = 2  # 5
+    bpd_num_repeats = 1  # 5
   else:
     raise ValueError(f"No bpd dataset {config.eval.bpd_dataset} recognized.")
 

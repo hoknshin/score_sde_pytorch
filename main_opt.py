@@ -37,25 +37,24 @@ flags.mark_flags_as_required(["workdir", "config", "mode"])
 
 
 def main(argv):
-    
+    # Create the working directory
+    tf.io.gfile.makedirs(FLAGS.workdir)
+    # Set logger so that it outputs to both console and file
+    # Make logging work for both disk and Google Cloud Storage
+    gfile_stream = open(os.path.join(FLAGS.workdir, 'stdout.txt'), 'w')
+    handler = logging.StreamHandler(gfile_stream)
+    formatter = logging.Formatter('%(levelname)s - %(filename)s - %(asctime)s - %(message)s')
+    handler.setFormatter(formatter)
+    logger = logging.getLogger()
+    logger.addHandler(handler)
+    logger.setLevel('INFO')
+
     def objective(trial):
         FLAGS.config.model.num_scales = trial.suggest_int("num_scales", 900, 1200, step=100)
         FLAGS.config.model.beta_max = trial.suggest_discrete_uniform("beta_max", 10, 30, 10)
         FLAGS.config.model.nonlinearity = trial.suggest_categorical("nonlinearity", ["swish", "relu"])
         FLAGS.config.optim.lr = trial.suggest_float("lr", 1e-4, 4e-4, step=1e-4)
         FLAGS.config.model.discount_sigma = trial.suggest_float("discount_sigma", 0.7, 1.2, step=0.1)
-
-        # Create the working directory
-        tf.io.gfile.makedirs(FLAGS.workdir)
-        # Set logger so that it outputs to both console and file
-        # Make logging work for both disk and Google Cloud Storage
-        gfile_stream = open(os.path.join(FLAGS.workdir, 'stdout.txt'), 'w')
-        handler = logging.StreamHandler(gfile_stream)
-        formatter = logging.Formatter('%(levelname)s - %(filename)s - %(asctime)s - %(message)s')
-        handler.setFormatter(formatter)
-        logger = logging.getLogger()
-        logger.addHandler(handler)
-        logger.setLevel('INFO')
 
         logging.info("cur trials: num_scales %d, beta_max %.0f, nonlinearity %s, lr %.6f, discound_sigma %.1f" % (
             FLAGS.config.model.num_scales, FLAGS.config.model.beta_max, FLAGS.config.model.nonlinearity,
@@ -68,7 +67,8 @@ def main(argv):
 #       elif FLAGS.mode == "eval":
         # Run the evaluation pipeline
         bpd, fid = run_lib.evaluate(FLAGS.config, FLAGS.workdir, FLAGS.eval_folder)
-        return bpd + fid / 30.0
+        #return bpd + fid / 30.0  # baseline 3.4, 100
+        return bpd # baseline 3.4, 100
         
     study = optuna.create_study()
 #     create_study(direction = "maximize")
