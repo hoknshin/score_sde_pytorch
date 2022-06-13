@@ -318,7 +318,7 @@ def evaluate(config,
     if config.eval.enable_bpd:
       for repeat in range(bpd_num_repeats):
         bpd_iter = iter(ds_bpd)  # pytype: disable=wrong-arg-types
-        for batch_id in range(2):  # len(ds_bpd)
+        for batch_id in range(1):  # len(ds_bpd)
           batch = next(bpd_iter)
           eval_batch = torch.from_numpy(batch['image']._numpy()).to(config.device).float()
           eval_batch = eval_batch.permute(0, 3, 1, 2)

@@ -7,10 +7,10 @@ def get_default_configs():
   # training
   config.training = training = ml_collections.ConfigDict()
   config.training.batch_size = 128
-  training.n_iters = 2000
-  training.snapshot_freq = 2000  # 50000
+  training.n_iters = 400  #2000
+  training.snapshot_freq = 400  # 50000
   training.log_freq = 200
-  training.eval_freq = 200
+  training.eval_freq = 400
   ## store additional checkpoints for preemption in cloud computing environments
   training.snapshot_freq_for_preemption = 1000  #10000
   ## produce samples at each snapshot.
@@ -30,9 +30,9 @@ def get_default_configs():
   config.eval = evaluate = ml_collections.ConfigDict()
   evaluate.begin_ckpt = 1 # 9
   evaluate.end_ckpt = 1
-  evaluate.batch_size = 128  # 1024
-  evaluate.enable_sampling = True  # fid
-  evaluate.num_samples = 256  #384 # 50000 # for fid
+  evaluate.batch_size = 256  # 1024
+  evaluate.enable_sampling = False  # fid
+  evaluate.num_samples = 256  #256  #384 # 50000 # for fid
   evaluate.enable_loss = False
   evaluate.enable_bpd = True
   evaluate.bpd_dataset = 'test'

@@ -23,6 +23,7 @@ import logging
 import os
 import tensorflow as tf
 
+import os
 import optuna
 
 FLAGS = flags.FLAGS
@@ -61,6 +62,7 @@ def main(argv):
             FLAGS.config.optim.lr, FLAGS.config.model.discount_sigma
         ))
 
+        os.system('rm work/checkpoints/*.pth')
 #       if FLAGS.mode == "train":
         # Run the training pipeline
         run_lib.train(FLAGS.config, FLAGS.workdir)
@@ -72,7 +74,7 @@ def main(argv):
         
     study = optuna.create_study()
 #     create_study(direction = "maximize")
-    study.optimize(objective, n_trials=80)
+    study.optimize(objective, n_trials=30)
   
     torch.save(study, 'study.pth')
 
