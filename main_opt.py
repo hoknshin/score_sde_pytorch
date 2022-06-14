@@ -46,22 +46,26 @@ def main(argv):
     handler = logging.StreamHandler(gfile_stream)
     formatter = logging.Formatter('%(levelname)s - %(filename)s - %(asctime)s - %(message)s')
     handler.setFormatter(formatter)
+
+    optuna.logging.get_logger("optuna").addHandler(handler)
+
     logger = logging.getLogger()
     logger.addHandler(handler)
     logger.setLevel('INFO')
 
     def objective(trial):
-        FLAGS.config.model.num_scales = trial.suggest_int("num_scales", 900, 1200, step=100)
-        FLAGS.config.model.beta_max = trial.suggest_discrete_uniform("beta_max", 10, 30, 10)
-        FLAGS.config.model.nonlinearity = trial.suggest_categorical("nonlinearity", ["swish", "relu"])
-        FLAGS.config.optim.lr = trial.suggest_float("lr", 1e-4, 4e-4, step=1e-4)
-        FLAGS.config.model.discount_sigma = trial.suggest_float("discount_sigma", 0.7, 1.2, step=0.1)
+        FLAGS.config.model.num_scales = trial.suggest_int("num_scales", 700, 1500)
+        FLAGS.config.model.beta_max = trial.suggest_discrete_uniform("beta_max", 5, 50, 1)
+        FLAGS.config.model.nonlinearity = trial.suggest_categorical("nonlinearity", ["swish", "relu", 'lrelu'])
+        FLAGS.config.optim.lr = trial.suggest_float("lr", 1e-4, 1e-2, step=1e-4)
+        FLAGS.config.model.discount_sigma = trial.suggest_float("discount_sigma", 0.7, 2.2)
 
         logging.info("cur trials: num_scales %d, beta_max %.0f, nonlinearity %s, lr %.6f, discound_sigma %.1f" % (
             FLAGS.config.model.num_scales, FLAGS.config.model.beta_max, FLAGS.config.model.nonlinearity,
             FLAGS.config.optim.lr, FLAGS.config.model.discount_sigma
         ))
 
+        torch.save(study, 'study_temp.pth')
         os.system('rm work/checkpoints/*.pth')
 #       if FLAGS.mode == "train":
         # Run the training pipeline
@@ -74,7 +78,7 @@ def main(argv):
         
     study = optuna.create_study()
 #     create_study(direction = "maximize")
-    study.optimize(objective, n_trials=30)
+    study.optimize(objective, n_trials=80)
   
     torch.save(study, 'study.pth')
 
